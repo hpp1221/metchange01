@@ -4,7 +4,15 @@
       <h3 class="page-title">商品列表</h3>
       <el-form ref="easyForm" :model="easyForm" inline class="request-form">
         <el-form-item label="商品分类">
-          <catselect @getCatSelect="getCatSelect"></catselect>
+          <el-cascader
+            :options="goodListCatList"
+            :show-all-levels="false"
+            @change="GoodListCatListChange"
+            :clearable="true"
+            filterable
+          >
+          </el-cascader>
+          <!--<catselect @getCatSelect="getCatSelect"></catselect>-->
         </el-form-item>
         <el-form-item label="商品状态">
           <el-select placeholder="商品状态" v-model="easyForm.type">
@@ -119,7 +127,16 @@
             </el-input>
           </el-form-item>
           <el-form-item label="商品分类">
-            <catselect @getCatSelect="getFormCatSelect"></catselect>
+            <el-cascader
+              :options="goodListCatList"
+              :show-all-levels="false"
+              @change="GoodListCatListChangeAdvance"
+              :clearable="true"
+              filterable
+            >
+
+            </el-cascader>
+            <!--<catselect @getCatSelect="getFormCatSelect"></catselect>-->
           </el-form-item>
           <el-form-item label="商品品牌">
             <brandselect @getBrandSelect="getBrandSelect" style="width:350px;"></brandselect>
@@ -181,6 +198,8 @@
   export default {
     data() {
       return {
+        goodListCatList:[],//商品分类数组
+        selectGoodsCatMapName:{},//map对象,
         tableData: [],
         brandNameSelectData:[],//商品品牌
         advanceSearch: false,
@@ -228,27 +247,65 @@
       this.searchType === 1 ? this.select(localStorage.getItem('pageSizeList'),localStorage.getItem('pageNumList')) : this.advanceSelect(localStorage.getItem('pageSizeList'),localStorage.getItem('pageNumList'));
     },
     methods: {
-      getBrandSelect(e) {
-        this.form.brandId = e.brandDealerId;
-        this.form.brandName = e.brandName;
-        this.form.brand = e.brand;
-      },
       pageChanged(page) {
         this.pageSize = page.size;
         this.pageNum = page.num;
         localStorage.setItem('pageSizeList',page.size);
         localStorage.setItem('pageNumList',page.num);
+        this.getGoodListCatList();
+        this.getGoodListCatListName();
         this.searchType === 1 ? this.select(page.size, page.num) : this.advanceSelect(page.size, page.num);
       },
-      getCatSelect(e) {
-        this.easyForm.cat = e.cat;
-        this.easyForm.catId = e.catId,
-        this.easyForm.catName = e.catName
+      getGoodListCatList(){//商品列表中的商品分类级联选择器
+        let self = this;
+        let requestData = {};
+        self.httpApi.goodsCat.getGoodsCatTree(requestData, function (data) {
+          self.goodListCatList = data.data.goodsCatTrees;
+        });
       },
-      getFormCatSelect(e) {
-        this.form.cat = e.cat;
-        this.form.catId = e.catId,
-          this.form.catName = e.catName
+      getGoodListCatListName(){//根据分类id获取name 的
+        let self = this;
+        let requestData = {};
+        self.httpApi.goodsCat.selectGoodsCatMap(requestData, function (data) {
+          self.selectGoodsCatMapName = data.data;
+        });
+      },
+      GoodListCatListChange(val){//商品列表中的商品分类级联选择器回调函数
+        let self = this;
+        let catId = val[1];
+        let selectGoodsCatMapName = self.selectGoodsCatMapName;
+        let catName = '';
+        if(selectGoodsCatMapName){
+          for(let key in selectGoodsCatMapName){
+            if(catId === key){
+              catName = selectGoodsCatMapName[key].name;
+            }
+          }
+        }
+        self.easyForm.catId = catId;
+        self.easyForm.catName = catName;
+        console.log('id',self.easyForm.catId);
+        console.log('name',self.easyForm.catName);
+      },
+      GoodListCatListChangeAdvance(valAdvance){
+        let self = this;
+        let catId = valAdvance[1];
+        let selectGoodsCatMapName = self.selectGoodsCatMapName;
+        let catName = '';
+        if(selectGoodsCatMapName){
+          for(let key in selectGoodsCatMapName){
+            if(catId === key){
+              catName = selectGoodsCatMapName[key].name;
+            }
+          }
+        }
+        self.form.catId = catId;
+        self.form.catName = catName;
+      },
+      getBrandSelect(e) {
+        this.form.brandId = e.brandDealerId;
+        this.form.brandName = e.brandName;
+        this.form.brand = e.brand;
       },
       seeDetail(id) {
         let url = '/goods/goodsDetail/' + id;

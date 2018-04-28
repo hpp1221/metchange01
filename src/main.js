@@ -40,7 +40,7 @@ new Vue({
   router,
   store,
   template: '<App/>',
-  components: { App },
+  components: { App },//注册组件  index.html中的body的id为app的才能使用
   // beforeCreate:function () {
   //   router.push('/login')
   // }

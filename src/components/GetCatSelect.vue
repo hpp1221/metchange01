@@ -8,6 +8,7 @@
     @change="getCat"
     :props="props"
     :disabled="disabled"
+    :clearable="clearable"
   >
   </el-cascader>
   <!--@click.native="getCatListClick"-->
