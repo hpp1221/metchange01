@@ -4,7 +4,7 @@
       <h3 class="page-title">售后订单详情</h3>
       <el-form ref="easyForm" :model="easyForm" inline>
         <el-form-item label="订单号 :">
-{{easyForm.orderNumber}}
+          {{easyForm.orderNumber}}
         </el-form-item>
 
         <el-form-item label="下单时间 :">
@@ -66,22 +66,17 @@
             placeholder="多行输入"
             :disabled="true"
             v-model="easyForm.comment"
-          style="width:500px;">
+            style="width:500px;">
           </el-input>
         </el-form-item>
         <br>
-        <!--<el-form-item label="上传凭证">
+        <el-form-item label="售后图片">
           <div v-for="(u,index) in easyForm.orderAftersalesVoucherList" :key="index"
-               style="float: left;margin-right: 100px;text-align: center">
-            <uploadoneimg
-              v-if="easyForm.orderAftersalesVoucherList.length > 0"
-              :fileList="u.url"
-              :disabled="true"
-            >
-            </uploadoneimg>
+               style="float: left;margin-right: 50px;text-align: center">
+            <img :src="u.url" alt="" @click="clickAfterImg(u.url)">
           </div>
         </el-form-item>
-        <br>-->
+        <br>
         <el-form-item label="处理结果">
           <el-input
             type="textarea"
@@ -93,6 +88,13 @@
           </el-input>
         </el-form-item>
       </el-form>
+      <el-dialog
+        :visible.sync="dialogVisibleAfterImg"
+        width="30%"
+        :modal=true
+        center>
+        <img :src="imgUrl" alt="" style="display: flex;justify-content: center;align-content: center">
+      </el-dialog>
     </div>
   </div>
 </template>
@@ -104,28 +106,28 @@
   export default {
     data() {
       return {
-        totalReducePrice:'',
-        easyForm:{
-          orderId:'',//订单id
-          orderAftersalesVoucherList:[],
+        totalReducePrice: '',
+        easyForm: {
+          orderId: '',//订单id
+          orderAftersalesVoucherList: [],
           tableData: [],
-          comment:'',
-          refundPrice:'',//退款金额
-          order:{
-            memberId:'',
-            memberName:'',
+          comment: '',
+          refundPrice: '',//退款金额
+          order: {
+            memberId: '',
+            memberName: '',
             paymentPrice: '',//所有商品加的应付总额
-            totalPrice:'',//总金额
+            totalPrice: '',//总金额
             orderNumber: '',
             sellerName: '',
             createTime: '',
-            orderDetail:{
+            orderDetail: {
               contacts: '',
-              address:'',
-              mobile:''
+              address: '',
+              mobile: ''
             },
             orderItemList: [{
-              itemId:'',//订单项id
+              itemId: '',//订单项id
               goodsSkuNumber: '',//商品编号
               goodsTitle: '',//商品名
               goodsSku: '',//规格
@@ -135,7 +137,7 @@
               number: '',
               subtotal: '',//小计
               putPrice: '',//价格
-              reducePrice:'',//优惠
+              reducePrice: '',//优惠
               combination: '',//编号和名称组合
               goodsSkuId: '',//规格id
             }],
@@ -147,10 +149,12 @@
             name: '未关闭售后'
           },
           {
-            id:2,
-            name:'已关闭售后'
+            id: 2,
+            name: '已关闭售后'
           }
         ],//状态
+        dialogVisibleAfterImg: false,//img放大
+        imgUrl: '',
       }
     },
     created() {
@@ -165,7 +169,7 @@
       select(id) {//查询
         let self = this;
         let requestData = {
-          orderAftersalesId:id,
+          orderAftersalesId: id,
         };
         self.httpApi.aftersale.selectOrderAftersalesById(requestData, function (data) {
           self.easyForm = data.data;
@@ -173,6 +177,10 @@
           self.totalReducePrice = self.totalReducePrice.toFixed(2);
         });
       },
+      clickAfterImg(url) {
+        this.dialogVisibleAfterImg = true;
+        this.imgUrl = url.replace('/w/100/h/100', '/w/500/h/500');
+      },//点击图片放大
       returnOrderList() {
         this.$router.push('/aftersale/list')
       },

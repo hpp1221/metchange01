@@ -70,18 +70,13 @@
           </el-input>
         </el-form-item>
         <br>
-        <!--<el-form-item label="上传凭证">
+        <el-form-item label="售后图片">
           <div v-for="(u,index) in easyForm.orderAftersalesVoucherList" :key="index"
-               style="float: left;margin-right: 100px;text-align: center">
-            <uploadoneimg
-              v-if="easyForm.orderAftersalesVoucherList.length > 0"
-              :fileList="u.url"
-              :disabled="true"
-            >
-            </uploadoneimg>
+               style="float: left;margin-right: 50px;text-align: center">
+            <img :src="u.url" alt="" @click="clickAfterImg(u.url)">
           </div>
         </el-form-item>
-        <br>-->
+        <br>
         <el-form-item label="处理结果">
           <el-input
             type="textarea"
@@ -97,6 +92,13 @@
           <el-button @click="closeAfter">关闭售后</el-button>
         </el-form-item>
       </el-form>
+      <el-dialog
+        :visible.sync="dialogVisibleAfterImg"
+        width="30%"
+        :modal=true
+        center>
+        <img :src="imgUrl" alt="" style="display: flex;justify-content: center;align-content: center">
+      </el-dialog>
     </div>
   </div>
 </template>
@@ -159,6 +161,8 @@
             name:'已关闭售后'
           }
         ],//状态
+        dialogVisibleAfterImg: false,//img放大
+        imgUrl: '',
       }
     },
     created() {
@@ -183,6 +187,10 @@
           self.totalReducePrice = self.totalReducePrice.toFixed(2);
         });
       },
+      clickAfterImg(url) {
+        this.dialogVisibleAfterImg = true;
+        this.imgUrl = url.replace('/w/100/h/100', '/w/500/h/500');
+      },//点击图片放大
       returnAfterList(){
           this.$router.push('/aftersale/list')
       },

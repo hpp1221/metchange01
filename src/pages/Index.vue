@@ -141,14 +141,15 @@
               background-color="#333745"
               text-color="#fff"
               active-text-color="#ffd04b">
-              <el-menu-item index="1" style="padding:0;">
-                <i class="iconfont icon-order"></i>
-                <span slot="title" style="margin-left: 3px;">订单管理</span>
-              </el-menu-item>
               <el-menu-item index="2" style="padding:0">
                 <i class="iconfont icon-shangpin" style="color: #878d99"></i>
                 <span slot="title" style="margin-left: 3px;">商品管理</span>
               </el-menu-item>
+              <el-menu-item index="1" style="padding:0;">
+                <i class="iconfont icon-order"></i>
+                <span slot="title" style="margin-left: 3px;">订单管理</span>
+              </el-menu-item>
+
               <el-menu-item index="5" style="padding:0;">
                 <i class="iconfont icon-addressbook"></i>
                 <span slot="title" style="margin-left: 3px;">品牌管理</span>
