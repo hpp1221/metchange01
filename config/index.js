@@ -30,8 +30,8 @@ module.exports = {
     proxyTable: {
       '/admin': {
          // target: 'http://47.94.241.192:8083',
-           target: 'http://192.168.41.29:9002',
-         //  target: 'http://192.168.41.78:9002',
+         //   target: 'http://192.168.41.29:9002',
+          target: 'http://192.168.41.78:9002',
         // target: 'http://192.168.41.216:9002',
          // target: 'http://192.168.41.215:9002',
        // target: 'http://192.168.41.218:8081',

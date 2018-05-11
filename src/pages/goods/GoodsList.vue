@@ -140,15 +140,9 @@
           </el-form-item>
           <el-form-item label="商品品牌">
             <brandselect @getBrandSelect="getBrandSelect" style="width:350px;"></brandselect>
-            <!--<brandselect @getBrandSelect="getBrandSelect" :outBrand="form.brand" :isClickFetch="false"></brandselect>-->
-            <!--<el-select v-model="form.brandId" filterable placeholder="请选择">-->
-              <!--<el-option-->
-                <!--v-for="item in brandNameSelectData"-->
-                <!--:key="item.brandDealerId"-->
-                <!--:label="item.name"-->
-                <!--:value="item.brandDealerId">-->
-              <!--</el-option>-->
-            <!--</el-select>-->
+          </el-form-item>
+          <el-form-item label="贸易形态">
+            <gradetypeselect @getGradeTypeSelect="getGradeTypeSelect" :selectAllVisible="false" style="width:350px;"></gradetypeselect>
           </el-form-item>
           <!--<el-form-item label="库存状态">-->
             <!--<el-checkbox v-model="form.upLimit" label="高于库存上限值" :true-label="1" :false-label="0"></el-checkbox>-->
@@ -165,6 +159,7 @@
             <el-radio class="radio" v-model="form.source" :label="0">手动新增</el-radio>
             <el-radio class="radio" v-model="form.source" :label="1">批量导入</el-radio>
           </el-form-item>
+
         </el-form>
         <el-button @click="advanceSelect(pageSize,pageNum)">确定</el-button>
         <el-button @click="advanceSearch = false">取消</el-button>
@@ -221,6 +216,8 @@
           upLimit: 0,
           downLimit: 0,
           zero: 0,
+          tradeType:'',//贸易形态
+          tradeName:'',
         },
         easyForm: {//简单查询
           cat: [],//所属仓库
@@ -241,7 +238,8 @@
       'pagination': require('../../components/pagination'),
       'catselect': require('../../components/getcatselect'),
       'getcheckbox': require('../../components/getcheckbox'),
-      'brandselect': require('../../components/getbrandselect')
+      'brandselect': require('../../components/getbrandselect'),
+      'gradetypeselect': require('../../components/getgradetypeselect'),
     },
     activated(){
       this.searchType === 1 ? this.select(localStorage.getItem('pageSizeList'),localStorage.getItem('pageNumList')) : this.advanceSelect(localStorage.getItem('pageSizeList'),localStorage.getItem('pageNumList'));
@@ -306,6 +304,11 @@
         this.form.brandId = e.brandDealerId;
         this.form.brandName = e.brandName;
         this.form.brand = e.brand;
+      },
+      getGradeTypeSelect(e){//贸易形态
+        this.form.gradeType = e.gradeType;
+        this.form.tradeName = e.tradeName;
+        this.form.tradeType = e.gradeType.value;
       },
       seeDetail(id) {
         let url = '/goods/goodsDetail/' + id;

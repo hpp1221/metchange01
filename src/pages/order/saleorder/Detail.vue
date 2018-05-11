@@ -88,7 +88,7 @@
         <!-- 之前物流信息-->
         <el-form-item label="之前物流">
           <!--<i class="el-icon-plus" style="margin:0px 20px 0px 50px;font-weight: 700;font-size: 18px;"></i>-->
-          <el-button v-if="form.orderStatus === 2 || form.orderStatus === 3" style="margin-bottom: 10px"
+          <el-button v-if="form.orderStatus === 2 || form.orderStatus === 3 || form.orderStatus === 4" style="margin-bottom: 10px"
                      @click="addLogisticsOld">添加物流信息
           </el-button>
           <el-button v-else style="margin-bottom: 10px" @click="addLogisticsOld" :disabled="true">添加物流信息</el-button>
@@ -105,7 +105,7 @@
         <!-- 之前物流信息-->
 
         <el-form-item label="物流信息">
-          <el-button @click="addLogesticsFormNow" v-if="form.orderStatus === 2 || form.orderStatus === 3">添加物流信息
+          <el-button @click="addLogesticsFormNow" v-if="form.orderStatus === 2 || form.orderStatus === 3 || form.orderStatus === 4">添加物流信息
           </el-button>
           <el-button @click="addLogesticsFormNow" v-else :disabled="true">添加物流信息</el-button>
 
@@ -290,7 +290,6 @@
         form: {
           paymentPrice: '',//所有商品加的应付总额
           totalPrice: '',//总金额
-
           orderId: '',//订单id
           orderNumber: '',
           sellerName: '',
@@ -333,10 +332,10 @@
             name: '待评价订单',
             id: 4
           },
-          /*{
-            name: '已完成',
+          {
+            name: '订单已完成',
             id: 5
-          },*/
+          },
           {
             name: '取消订单',
             id: 6
@@ -344,6 +343,10 @@
           {
             name: '退款和退货订单',
             id: 7
+          },
+          {
+            name: '已关闭',
+            id: 8
           },
           {
             name: '已完成 ',
