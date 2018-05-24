@@ -140,9 +140,15 @@
           </el-form-item>
           <el-form-item label="商品品牌">
             <brandselect @getBrandSelect="getBrandSelect" style="width:350px;"></brandselect>
-          </el-form-item>
-          <el-form-item label="贸易形态">
-            <gradetypeselect @getGradeTypeSelect="getGradeTypeSelect" :selectAllVisible="false" style="width:350px;"></gradetypeselect>
+            <!--<brandselect @getBrandSelect="getBrandSelect" :outBrand="form.brand" :isClickFetch="false"></brandselect>-->
+            <!--<el-select v-model="form.brandId" filterable placeholder="请选择">-->
+              <!--<el-option-->
+                <!--v-for="item in brandNameSelectData"-->
+                <!--:key="item.brandDealerId"-->
+                <!--:label="item.name"-->
+                <!--:value="item.brandDealerId">-->
+              <!--</el-option>-->
+            <!--</el-select>-->
           </el-form-item>
           <!--<el-form-item label="库存状态">-->
             <!--<el-checkbox v-model="form.upLimit" label="高于库存上限值" :true-label="1" :false-label="0"></el-checkbox>-->
@@ -159,7 +165,6 @@
             <el-radio class="radio" v-model="form.source" :label="0">手动新增</el-radio>
             <el-radio class="radio" v-model="form.source" :label="1">批量导入</el-radio>
           </el-form-item>
-
         </el-form>
         <el-button @click="advanceSelect(pageSize,pageNum)">确定</el-button>
         <el-button @click="advanceSearch = false">取消</el-button>
@@ -190,324 +195,355 @@
 </template>
 
 <script>
-  export default {
-    data() {
-      return {
-        goodListCatList:[],//商品分类数组
-        selectGoodsCatMapName:{},//map对象,
-        tableData: [],
-        brandNameSelectData:[],//商品品牌
-        advanceSearch: false,
-        form: {
-          //        storeHouseAddress: '',//所属仓库
-//          storeStatus: -1,
-//          tagId: '',//商品标签
-          //       goodsStatus: '',//商品状态
-          keyword: '',//关键词
-          //       series: '',//商品分类
-          cat: [],
-          catId: '',
-          catName: '',
-          brand: '',
-          brandName: '',
-          brandId: '',
-          source: '',//商品来源,全部是-1，手动新增0，批量导入1
-          type: '',//1是上架，0是下架
-          upLimit: 0,
-          downLimit: 0,
-          zero: 0,
-          tradeType:'',//贸易形态
-          tradeName:'',
-        },
-        easyForm: {//简单查询
-          cat: [],//所属仓库
-          catId: '',
-          catName: '',
-          type: '',//1是上架，0是下架
-        },
-        pageSize: 5,
-        pageNum: 1,
-        totalPage: 10,
-        multipleSelection: [],
-        upOrDownIds:[],//上下架ids
-        selectionObj: {},
-        searchType: 1//1是简单搜索，2是高级搜索
+export default {
+  data() {
+    return {
+      goodListCatList: [], //商品分类数组
+      selectGoodsCatMapName: {}, //map对象,
+      tableData: [],
+      brandNameSelectData: [], //商品品牌
+      advanceSearch: false,
+      form: {
+        //        storeHouseAddress: '',//所属仓库
+        //          storeStatus: -1,
+        //          tagId: '',//商品标签
+        //       goodsStatus: '',//商品状态
+        keyword: "", //关键词
+        //       series: '',//商品分类
+        cat: [],
+        catId: "",
+        catName: "",
+        brand: "",
+        brandName: "",
+        brandId: "",
+        source: "", //商品来源,全部是-1，手动新增0，批量导入1
+        type: "", //1是上架，0是下架
+        upLimit: 0,
+        downLimit: 0,
+        zero: 0
+      },
+      easyForm: {
+        //简单查询
+        cat: [], //所属仓库
+        catId: "",
+        catName: "",
+        type: "" //1是上架，0是下架
+      },
+      pageSize: 5,
+      pageNum: 1,
+      totalPage: 10,
+      multipleSelection: [],
+      upOrDownIds: [], //上下架ids
+      selectionObj: {},
+      searchType: 1 //1是简单搜索，2是高级搜索
+    };
+  },
+  components: {
+    pagination: require("../../components/pagination"),
+    catselect: require("../../components/getcatselect"),
+    getcheckbox: require("../../components/getcheckbox"),
+    brandselect: require("../../components/getbrandselect")
+  },
+  activated() {
+    this.searchType === 1
+      ? this.select(
+          localStorage.getItem("pageSizeList"),
+          localStorage.getItem("pageNumList")
+        )
+      : this.advanceSelect(
+          localStorage.getItem("pageSizeList"),
+          localStorage.getItem("pageNumList")
+        );
+  },
+  methods: {
+    pageChanged(page) {
+      this.pageSize = page.size;
+      this.pageNum = page.num;
+      localStorage.setItem("pageSizeList", page.size);
+      localStorage.setItem("pageNumList", page.num);
+      this.getGoodListCatList();
+      this.getGoodListCatListName();
+      this.searchType === 1
+        ? this.select(page.size, page.num)
+        : this.advanceSelect(page.size, page.num);
+    },
+    getGoodListCatList() {
+      //商品列表中的商品分类级联选择器
+      let self = this;
+      let requestData = {};
+      self.httpApi.goodsCat.getGoodsCatTree(requestData, function(data) {
+        self.goodListCatList = data.data.goodsCatTrees;
+      });
+    },
+    getGoodListCatListName() {
+      //根据分类id获取name 的
+      let self = this;
+      let requestData = {};
+      self.httpApi.goodsCat.selectGoodsCatMap(requestData, function(data) {
+        self.selectGoodsCatMapName = data.data;
+      });
+    },
+    GoodListCatListChange(val) {
+      //商品列表中的商品分类级联选择器回调函数
+      let self = this;
+      let catId = val[1];
+      let selectGoodsCatMapName = self.selectGoodsCatMapName;
+      let catName = "";
+      if (selectGoodsCatMapName) {
+        for (let key in selectGoodsCatMapName) {
+          if (catId === key) {
+            catName = selectGoodsCatMapName[key].name;
+          }
+        }
+      }
+      self.easyForm.catId = catId;
+      self.easyForm.catName = catName;
+      console.log("id", self.easyForm.catId);
+      console.log("name", self.easyForm.catName);
+    },
+    GoodListCatListChangeAdvance(valAdvance) {
+      let self = this;
+      let catId = valAdvance[1];
+      let selectGoodsCatMapName = self.selectGoodsCatMapName;
+      let catName = "";
+      if (selectGoodsCatMapName) {
+        for (let key in selectGoodsCatMapName) {
+          if (catId === key) {
+            catName = selectGoodsCatMapName[key].name;
+          }
+        }
+      }
+      self.form.catId = catId;
+      self.form.catName = catName;
+    },
+    getBrandSelect(e) {
+      this.form.brandId = e.brandDealerId;
+      this.form.brandName = e.brandName;
+      this.form.brand = e.brand;
+    },
+    seeDetail(id) {
+      let url = "/goods/goodsDetail/" + id;
+      this.$router.push(url);
+    },
+    select(size, num) {
+      //查询
+      let self = this;
+      let requestData = {
+        pageSize: size,
+        pageNo: num,
+        temp: JSON.stringify(self.selectionObj),
+        goodsSkuRequest: self.easyForm
+      };
+      //        requestData = Object.assign(requestData, self.shallowCopy(self.easyForm));
+      self.httpApi.goods.skuList(requestData, function(data) {
+        self.tableData = data.data.list;
+        self.totalPage = data.data.total;
+        self.searchType = 1;
+        if (data.temp !== "{}") {
+          let list = JSON.parse(data.temp);
+          self.$nextTick(function() {
+            self.toggleSelection(list[num]);
+          });
+        }
+      });
+    },
+    advanceSelect(size, num) {
+      let self = this;
+      let requestData = {
+        pageSize: size,
+        pageNo: num,
+        goodsSkuRequest: self.form
+      };
+      self.httpApi.goods.skuList(requestData, function(data) {
+        self.advanceSearch = false;
+        self.searchType = 2;
+        self.tableData = data.data.list;
+        self.totalPage = data.data.total;
+      });
+    },
+    toggleSelection(rows) {
+      if (rows) {
+        let arr = [];
+        for (let i = 0; i < this.tableData.length; i++) {
+          for (let j = 0; j < rows.length; j++) {
+            if (this.tableData[i].id === rows[j].id) {
+              arr.push(this.tableData[i]);
+            }
+          }
+        }
+        arr.forEach(row => {
+          this.$refs.multipleTable.toggleRowSelection(row);
+        });
       }
     },
-    components: {
-      'pagination': require('../../components/pagination'),
-      'catselect': require('../../components/getcatselect'),
-      'getcheckbox': require('../../components/getcheckbox'),
-      'brandselect': require('../../components/getbrandselect'),
-      'gradetypeselect': require('../../components/getgradetypeselect'),
+    handleSelectionChange(val) {
+      let self = this;
+      for (let i = 0; i < val.length; i++) {
+        if (self.upOrDownIds.indexOf(self.upOrDownIds[i]) == -1) {
+          self. upOrDownIds.push(val[i].id);
+        }
+      }
+      if (val.length > 0) {
+        self.multipleSelection = val;
+        self.selectionObj[self.pageNum] = val;
+      }
     },
-    activated(){
-      this.searchType === 1 ? this.select(localStorage.getItem('pageSizeList'),localStorage.getItem('pageNumList')) : this.advanceSelect(localStorage.getItem('pageSizeList'),localStorage.getItem('pageNumList'));
+    update(id, goodsId) {
+      //修改商品详情
+      let url = "/goods/updateGoods/" + id + "/" + goodsId;
+      this.$router.push(url);
     },
-    methods: {
-      pageChanged(page) {
-        this.pageSize = page.size;
-        this.pageNum = page.num;
-        localStorage.setItem('pageSizeList',page.size);
-        localStorage.setItem('pageNumList',page.num);
-        this.getGoodListCatList();
-        this.getGoodListCatListName();
-        this.searchType === 1 ? this.select(page.size, page.num) : this.advanceSelect(page.size, page.num);
-      },
-      getGoodListCatList(){//商品列表中的商品分类级联选择器
-        let self = this;
-        let requestData = {};
-        self.httpApi.goodsCat.getGoodsCatTree(requestData, function (data) {
-          self.goodListCatList = data.data.goodsCatTrees;
-        });
-      },
-      getGoodListCatListName(){//根据分类id获取name 的
-        let self = this;
-        let requestData = {};
-        self.httpApi.goodsCat.selectGoodsCatMap(requestData, function (data) {
-          self.selectGoodsCatMapName = data.data;
-        });
-      },
-      GoodListCatListChange(val){//商品列表中的商品分类级联选择器回调函数
-        let self = this;
-        let catId = val[1];
-        let selectGoodsCatMapName = self.selectGoodsCatMapName;
-        let catName = '';
-        if(selectGoodsCatMapName){
-          for(let key in selectGoodsCatMapName){
-            if(catId === key){
-              catName = selectGoodsCatMapName[key].name;
-            }
-          }
+    createGoods() {
+      this.$router.push("/goods/createGoods");
+    },
+    outputFile() {
+      //导出
+      let arr = [];
+      console.log("selectionObj", this.selectionObj);
+      return;
+      for (let i in this.selectionObj) {
+        for (let j = 0; j < this.selectionObj[i].length; j++) {
+          arr.push(this.selectionObj[i][j].id);
         }
-        self.easyForm.catId = catId;
-        self.easyForm.catName = catName;
-        console.log('id',self.easyForm.catId);
-        console.log('name',self.easyForm.catName);
-      },
-      GoodListCatListChangeAdvance(valAdvance){
-        let self = this;
-        let catId = valAdvance[1];
-        let selectGoodsCatMapName = self.selectGoodsCatMapName;
-        let catName = '';
-        if(selectGoodsCatMapName){
-          for(let key in selectGoodsCatMapName){
-            if(catId === key){
-              catName = selectGoodsCatMapName[key].name;
-            }
-          }
+      }
+      let url =
+        "admin/goods/exportGoods?token=" + localStorage.getItem("token");
+      //        let url = 'admin/goods/exportGoods?token=' + localStorage.getItem('token');
+      let str = "";
+      if (arr.length === 0) {
+        if (this.searchType === 1) {
+          str =
+            "&catId=" +
+            JSON.stringify(this.easyForm.catId) +
+            "&type=" +
+            this.easyForm.type;
+        } else {
+          str =
+            "&keyword=" +
+            this.form.keyword +
+            "&catId=" +
+            JSON.stringify(this.form.catId) +
+            "&brandId=" +
+            this.form.brandId +
+            "&upLimit=" +
+            this.form.upLimit +
+            "&downLimit=" +
+            this.form.downLimit +
+            "&zero=" +
+            this.form.zero +
+            "&type" +
+            this.form.type +
+            "&source" +
+            this.form.source;
         }
-        self.form.catId = catId;
-        self.form.catName = catName;
-      },
-      getBrandSelect(e) {
-        this.form.brandId = e.brandDealerId;
-        this.form.brandName = e.brandName;
-        this.form.brand = e.brand;
-      },
-      getGradeTypeSelect(e){//贸易形态
-        this.form.gradeType = e.gradeType;
-        this.form.tradeName = e.tradeName;
-        this.form.tradeType = e.gradeType.value;
-      },
-      seeDetail(id) {
-        let url = '/goods/goodsDetail/' + id;
-        this.$router.push(url);
-      },
-      select(size, num) {//查询
-        let self = this;
-        let requestData = {
-          pageSize: size,
-          pageNo: num,
-          temp: JSON.stringify(self.selectionObj),
-          goodsSkuRequest: self.easyForm,
-        };
-//        requestData = Object.assign(requestData, self.shallowCopy(self.easyForm));
-        self.httpApi.goods.skuList(requestData, function (data) {
-          self.tableData = data.data.list;
-          self.totalPage = data.data.total;
-          self.searchType = 1;
-          if (data.temp !== "{}") {
-            let list = JSON.parse(data.temp);
-            self.$nextTick(function () {
-              self.toggleSelection(list[num]);
-            })
-          }
-        });
-      },
-      advanceSelect(size, num) {
-        let self = this;
-        let requestData = {
-          pageSize: size,
-          pageNo: num,
-          goodsSkuRequest: self.form
-        };
-        self.httpApi.goods.skuList(requestData, function (data) {
-          self.advanceSearch = false;
-          self.searchType = 2;
-          self.tableData = data.data.list;
-          self.totalPage = data.data.total;
-        });
-      },
-      toggleSelection(rows) {
-        if (rows) {
-          let arr = [];
-          for (let i = 0; i < this.tableData.length; i++) {
-            for (let j = 0; j < rows.length; j++) {
-              if (this.tableData[i].id === rows[j].id) {
-                arr.push(this.tableData[i]);
-              }
-            }
-          }
-          arr.forEach(row => {
-            this.$refs.multipleTable.toggleRowSelection(row);
-          });
-        }
-      },
-      handleSelectionChange(val) {
-        let self = this;
-        for(let i = 0 ; i < val.length;i++){
-          if(self.upOrDownIds.indexOf(self.upOrDownIds[i]) == -1){
-            self.upOrDownIds.push(val[i].id);
-          }
-        }
-        if (val.length > 0) {
-
-          self.multipleSelection = val;
-          self.selectionObj[self.pageNum] = val;
-
-        }
-      },
-      update(id, goodsId) {//修改商品详情
-        let url = '/goods/updateGoods/' + id + '/' + goodsId;
-        this.$router.push(url);
-      },
-      createGoods() {
-        this.$router.push('/goods/createGoods');
-      },
-      outputFile() {//导出
-        let arr = [];
-        console.log('selectionObj',this.selectionObj);
-        return;
-        for (let i in this.selectionObj) {
-          for (let j = 0; j < this.selectionObj[i].length; j++) {
-            arr.push(this.selectionObj[i][j].id);
-          }
-        }
-        let url = 'admin/goods/exportGoods?token=' + localStorage.getItem('token');
-//        let url = 'admin/goods/exportGoods?token=' + localStorage.getItem('token');
-        let str = '';
-        if (arr.length === 0) {
-          if (this.searchType === 1) {
-            str = '&catId=' + JSON.stringify(this.easyForm.catId) + '&type=' + this.easyForm.type;
-          } else {
-            str = '&keyword=' + this.form.keyword +
-              '&catId=' + JSON.stringify(this.form.catId) +
-              '&brandId=' + this.form.brandId +
-              '&upLimit=' + this.form.upLimit +
-              '&downLimit=' + this.form.downLimit +
-              '&zero=' + this.form.zero +
-              '&type' + this.form.type +
-              '&source' + this.form.source;
-          }
-          this.$confirm('此操作将导出全部数据, 是否继续?', '提示', {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning',
-          }).then(() => {
+        this.$confirm("此操作将导出全部数据, 是否继续?", "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        })
+          .then(() => {
             location.href = url + str;
             this.$message({
-              type: 'success',
-              message: '导出成功!'
+              type: "success",
+              message: "导出成功!"
             });
-          }).catch(() => {
+          })
+          .catch(() => {
             this.$message({
-              type: 'info',
-              message: '已取消导出'
+              type: "info",
+              message: "已取消导出"
             });
           });
-
-        } else {
-          this.$confirm('此操作将导出已选数据, 是否继续?', '提示', {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning',
-          }).then(() => {
-            location.href = url + '&skuList=' + JSON.stringify(arr);
+      } else {
+        this.$confirm("此操作将导出已选数据, 是否继续?", "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        })
+          .then(() => {
+            location.href = url + "&skuList=" + JSON.stringify(arr);
             this.$message({
-              type: 'success',
-              message: '导出成功!'
+              type: "success",
+              message: "导出成功!"
             });
-          }).catch(() => {
+          })
+          .catch(() => {
             this.$message({
-              type: 'info',
-              message: '已取消导出'
+              type: "info",
+              message: "已取消导出"
             });
           });
-
-        }
-      },
-      multipleInputGoods() {
-        this.$router.push('/goods/multipleInputGoods');
-      },
-      multipleInputImgs() {
-        this.$router.push('/goods/multipleInputImgs');
-      },
-      putOnSale() {//上架
-        let self = this;
-        self.$confirm('请确认是否批量上架？', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
+      }
+    },
+    multipleInputGoods() {
+      this.$router.push("/goods/multipleInputGoods");
+    },
+    multipleInputImgs() {
+      this.$router.push("/goods/multipleInputImgs");
+    },
+    putOnSale() {
+      //上架
+      let self = this;
+      self
+        .$confirm("请确认是否批量上架？", "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        })
+        .then(() => {
           let requestData = {
             skuList: JSON.stringify(self.upOrDownIds),
             type: 1
           };
-          self.httpApi.goods.upOrDownGoods(requestData, function (data) {
-            self.$message.success('操作成功');
-            setTimeout(function () {
+          self.httpApi.goods.upOrDownGoods(requestData, function(data) {
+            self.$message.success("操作成功");
+            setTimeout(function() {
               self.$router.go(0);
             }, 500);
           });
-        }).catch(() => {
+        })
+        .catch(() => {
           self.$message({
-            type: 'info',
-            message: '您已取消上架'
+            type: "info",
+            message: "您已取消上架"
           });
         });
-      },
-      downSale() {//下架
-        let self = this;
-        self.$confirm('请确认是否批量下架？', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
+    },
+    downSale() {
+      //下架
+      let self = this;
+      self
+        .$confirm("请确认是否批量下架？", "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        })
+        .then(() => {
           let requestData = {
             skuList: JSON.stringify(self.upOrDownIds),
             type: 0
           };
-          self.httpApi.goods.upOrDownGoods(requestData, function (data) {
-            self.$message.success('操作成功');
-            setTimeout(function () {
+          self.httpApi.goods.upOrDownGoods(requestData, function(data) {
+            self.$message.success("操作成功");
+            setTimeout(function() {
               self.$router.go(0);
             }, 500);
           });
-        }).catch(() => {
+        })
+        .catch(() => {
           this.$message({
-            type: 'info',
-            message: '您已取消下架'
+            type: "info",
+            message: "您已取消下架"
           });
         });
-      },
-      // setTags() {//设置标签
-      //   this.dialogTableVisible = true;
-      // },
-      cancelSelect() {//取消选中
-        this.$refs.multipleTable.clearSelection();
-      }
-
+    },
+    // setTags() {//设置标签
+    //   this.dialogTableVisible = true;
+    // },
+    cancelSelect() {
+      //取消选中
+      this.$refs.multipleTable.clearSelection();
     }
   }
+};
 </script>
